@@ -88,11 +88,6 @@ with open("link_list.txt") as csvfile:
     for rec in file:
         sites.append(Site(rec[0]))
 
-[["awf", "afwaf"], ["awd"]]
-#into one
-["awf", "afwaf", "awd"]
-
-
 
 print(makeSList(sites[0], 'h1'))
 
