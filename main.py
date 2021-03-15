@@ -4,6 +4,7 @@ import urllib.request
 import os
 import tkinter as tk
 import webbrowser
+from PIL import Image, ImageTk
 os.system("cls")
 
 
@@ -174,57 +175,47 @@ with open("link_list.txt") as csvfile:
 
 
 
-
-
-
-# app = Tk()
-
-# app.title("Super Cool Search Engine")
-
-# app.geometry("400x400")
-
-# tBox = Entry(text="Search Here")
-# b = Button(app, text="Text", command=test(tBox.get("1.0", END)))
-
-# tBox.pack()
-# b.pack()
-# app.mainloop()
-
-
-
-
 class Application(tk.Frame):
     def __init__(self, master=None):
         super().__init__(master)
         self.master = master
-        self.master.geometry("400x400")
+        self.master.geometry("1600x900")
         self.master.title("Not Google")
-        self.pack()
+        self.master.resizable(False, False)
+        self.grid()
         self.create_widgets()
 
 
-    def create_widgets(self):
-        self.tBox = tk.Entry(text="Search Here")
+    def create_widgets(self): #~100px:15ch, width in pixels/6.6 = width in ch
+        self.img = Image.open("assets/gogle.png")
+        self.img = self.img.resize((350, 134)) #350x134px
+        self.tkimage = ImageTk.PhotoImage(self.img)
+        tk.Label(self.master, image = self.tkimage).grid()
         
-        self.b = tk.Button(self.master, text="Search", command = lambda : self.getLinks(self.tBox.get()))
-        
+        self.tBox = tk.Entry(text="Search Here", width = 109)
+        self.b = tk.Button(self.master, text="Search", width = 12, command = lambda : self.getLinks(self.tBox.get()))
+        self.linkButtons = []
+        self.tBox.grid(row=2, padx = (400, 0), pady= (25, 50))
+        self.b.grid(row=2, column=2, pady= (25, 50))
 
-        self.tBox.pack()
-        self.b.pack()
-
-    def getLinks(search, i):
-        print(i)
+    
+    def getLinks(self, search):
+        for b in self.linkButtons:
+            b.destroy()
+        self.linkButtons = []
         resetWeights()
-        for word in self.search.split():
+        for word in search.split():
             weightingFunc(word)
         for i in range(0, len(sites) - 1):
             for k in range(0, len(sites) - 1):
-                if sites[k].weight > sites[k + 1].weigth:
+                if sites[k].weight < sites[k + 1].weight:
                     swap(sites, k)
-
-        print(sites)
         
-    
+        for site in sites:
+            self.linkButtons.append(tk.Button(self.master, text = site.title[0], command = lambda aurl = site.url: webbrowser.open_new(aurl)))
+        for b in range(0, len(self.linkButtons)):
+            self.linkButtons[b].grid(row=b+3)
+
     def start(self):
         self.master.mainloop()
 
