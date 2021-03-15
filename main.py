@@ -2,7 +2,8 @@ from csv import reader
 from bs4 import BeautifulSoup as bs
 import urllib.request
 import os
-
+import tkinter as tk
+import webbrowser
 os.system("cls")
 
 
@@ -10,16 +11,16 @@ os.system("cls")
 
 def getTagText(l):
     for i in range(0, len(l)):
-        # We would like to add more tags but     
+        
         
         tlist = ['a', 'abbr', 'acronym', 'b', 'bdo', 'br', 'button', 'cite', 'code', 'dfn', 'em', 'i', 'img', 'input', 'kbd', 'label', 'map', 'object', 'output', 'q', 'samp', 'script', 'select', 'small', 'span', 'strong', 'sub', 'sup', 'textarea', 'time', 'tt', 'var']
         for tag in tlist:
             for match in l[i].find_all(tag):
                 match.unwrap()
         l[i] = l[i].get_text().split()
-    return(l)   
+    return(l)
 
-def makeSList(site, tag):   
+def makeSList(site, tag):
     l = [] 
     if(tag == "h1"):
         for i in site.h1s:
@@ -37,8 +38,8 @@ def makeSList(site, tag):
         for i in site.title:
             for t in i:
                 l.append(t)           
-    elif(tag == "firstP"):
-        for i in site.firstP:
+    elif(tag == "p"):
+        for i in site.p:
             for t in i:
                 l.append(t)
     elif(tag == "strong"):
@@ -54,6 +55,87 @@ def makeSList(site, tag):
 
 
 
+
+def swap(ls, i):
+    temp = ls[i]
+    ls[i] = ls[i+1]
+    ls[i+1] = temp
+
+#Bubble sort function takes in list to sort
+def sort(ls):
+    for i in range(0, len(ls) - 1):
+
+        for k in range(0, len(ls) - 1):
+
+            if ls[k] > ls[k + 1]:
+                swap(ls, k)    
+
+#Binary search function, takes in list to search
+def bns(ls, search):
+    sort(ls)
+    #Init min and max. Start at 0 for min and use max index, obtained from records, for max.
+    min = 0
+    max = len(ls) - 1
+    #Calculate midway point
+    guess = int((min + max) / 2)
+    #As long as min is still less than max, search term can still be found. And if search term was found, break loop.
+    while (min < max and search != ls[guess]):
+        #If the search term is alphabetically less than current guess index
+        if (search < ls[guess]):
+            max = guess - 1
+        else:
+            min = guess + 1
+        #New midpoint
+        guess = int((min + max) / 2)   
+    #Determine if the term was found and print corresponding statement
+    if search == ls[guess]:
+        #Found
+        return 1
+    else:
+        #Not Found
+        return 0
+    
+    
+
+#Sequential search function, takes list in to search
+def seq(ls, search):
+    f = -1  #Init index var. -1 means not found
+    count = 0
+    #Sequential search loop
+    for i in range(0, len(ls)):
+        if ls[i] == search:
+            f = i
+            count += 1
+            
+    #If f is still -1, search term was not found.
+    if f == -1:
+        return 0
+
+    return count + 1
+
+
+
+# 1 - 1/count
+def weightingFunc(search):
+    bnTags = ['h1', 'title', 'imgAlts']# 4, 4, 2
+    seqTags = ['h2', 'h3', 'p', 'strong', 'em']# 1, 1, 1, 1, 1,  
+    for site in sites:
+        for tag in bnTags:
+            if(tag == 'h1' and bns(makeSList(site, tag), search)):
+                site.weight+= 2
+            elif(tag == 'title' and bns(makeSList(site, tag), search)):
+                site.weight+= 2
+            elif(tag == 'title' and bns(makeSList(site, tag), search)):
+                site.weight+= 2
+        for tag in seqTags:
+            count = seq(makeSList(site,tag), search)
+            if(count != 0):
+                site.weight+= 1 - (1 / count)
+
+def resetWeights():
+    for site in sites:
+        site.weight = 0
+    
 class Site:
     def __init__(self, url):
         # constructor
@@ -68,20 +150,22 @@ class Site:
         for image in self.images:
             self.imageAlts.append(image.attrs['alt'])
         self.title = getTagText(self.soup.find_all('title'))
-        self.firstP = getTagText([self.soup.find('p')])
+        self.fPtags = []
+        self.ptags = self.soup.find_all('p')
+        for i in range(0, len(self.ptags)): 
+            if i < 5:
+                self.fPtags.append(self.ptags[i])
+            else:
+                i = len(self.ptags)
+        self.p = getTagText(self.fPtags)
         self.strong = getTagText(self.soup.find_all('strong'))
         self.em = getTagText(self.soup.find_all('em'))
         self.weight = 0
         # end constructor
         
-    def setWeight(self, weight):
-        self.weight = weight
-
-
+   
 
 sites = []
-
-
 
 with open("link_list.txt") as csvfile:
     file = reader(csvfile)
@@ -89,7 +173,62 @@ with open("link_list.txt") as csvfile:
         sites.append(Site(rec[0]))
 
 
-print(makeSList(sites[0], 'h1'))
 
 
+
+
+# app = Tk()
+
+# app.title("Super Cool Search Engine")
+
+# app.geometry("400x400")
+
+# tBox = Entry(text="Search Here")
+# b = Button(app, text="Text", command=test(tBox.get("1.0", END)))
+
+# tBox.pack()
+# b.pack()
+# app.mainloop()
+
+
+
+
+class Application(tk.Frame):
+    def __init__(self, master=None):
+        super().__init__(master)
+        self.master = master
+        self.master.geometry("400x400")
+        self.master.title("Not Google")
+        self.pack()
+        self.create_widgets()
+
+
+    def create_widgets(self):
+        self.tBox = tk.Entry(text="Search Here")
+        
+        self.b = tk.Button(self.master, text="Search", command = lambda : self.getLinks(self.tBox.get()))
+        
+
+        self.tBox.pack()
+        self.b.pack()
+
+    def getLinks(search, i):
+        print(i)
+        resetWeights()
+        for word in self.search.split():
+            weightingFunc(word)
+        for i in range(0, len(sites) - 1):
+            for k in range(0, len(sites) - 1):
+                if sites[k].weight > sites[k + 1].weigth:
+                    swap(sites, k)
+
+        print(sites)
+        
+    
+    def start(self):
+        self.master.mainloop()
+
+
+app = Application(master= tk.Tk())
+app.start()
 
