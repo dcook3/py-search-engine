@@ -6,7 +6,6 @@ https://en.wikipedia.org/wiki/Elizabeth_II
 https://en.wikipedia.org/wiki/Ken_MacQuarrie
 https://en.wikipedia.org/wiki/Python_(programming_language)
 https://www.python.org
-https://www.twitter.com
 https://www.youtube.com
 https://en.wikipedia.org/wiki/Golden_Jubilee_of_Elizabeth_II
 https://en.wikipedia.org/wiki/Silver_Jubilee_of_Elizabeth_II
