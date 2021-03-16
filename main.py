@@ -229,12 +229,8 @@ class Application(tk.Frame):
         self.imageLabel = tk.Label(self.master, bg="white", image = self.tkimage)
         self.tBox = tk.Entry(text="Search Here", width = 109)
         self.b = tk.Button(self.master, text="Search", width = 12, command = lambda : self.getLinks(self.tBox.get().lower()))
-        self.canvas = tk.Canvas(self.master, width = 95, height = 600, bg="white", bd=0)
-        self.vbar = tk.Scrollbar(self.canvas, orient = tk.VERTICAL)
-        
-        self.vbar.config(command = self.canvas.yview)
-        self.canvas.configure(yscrollcommand = self.vbar.set)
-        
+
+      
         self.linkButtons = []
         self.imageLabel.grid(row = 1, column = 1, padx = (500, 0), pady = (20, 0))
         self.tBox.grid(row=2, column = 1, padx = (400, 0), pady= (25, 50))
@@ -247,7 +243,7 @@ class Application(tk.Frame):
             b.destroy()
         self.linkButtons = []
         resetWeights()
-        print(search.split())
+        
         for word in search.split():
             
             weightingFunc(word)
@@ -257,12 +253,14 @@ class Application(tk.Frame):
                     swap(sites, k)
         
         for site in sites:
-            self.linkButtons.append(tk.Button(self.canvas, text = " ".join(site.title), bd = 0, bg="white", anchor = "w", activebackground = "grey", width = 90 ,command = lambda aurl = site.url: webbrowser.open_new(aurl)))
+            if site.weight > 0:
+                self.linkButtons.append(tk.Button(self.master, text = " ".join(site.title), bd = 0, fg = "#0645AD", bg = "white",  cursor = "hand2", anchor = "w", activebackground = "lightgrey", width = 90 ,command = lambda aurl = site.url: webbrowser.open_new(aurl)))
             
         for b in range(0, len(self.linkButtons)):
-            self.linkButtons[b].grid(row=b+1, column = 1, padx = (400, 0), pady= (0, 10))
-        self.canvas.grid(row = 3, column = 1)
-        self.vbar.grid(row = 1, column = 2, rowspan = len(self.linkButtons), sticky = "NS")
+            if b < 15:
+                self.linkButtons[b].grid(row=b+3, column = 1, padx = (400, 0), pady= (0, 10))
+        
+       
             
 
     def start(self):
@@ -277,18 +275,17 @@ with open("link_list.txt") as csvfile:
     for rec in file:
         sites.append(Site(rec[0]))
 
-# app = Application(master= tk.Tk())
-# app.start()
+app = Application(master= tk.Tk())
+app.start()
 
-search = input("Enter search query: ").lower()
-for word in search.split():
-        weightingFunc(word)
-for i in range(0, len(sites) - 1):
-        for k in range(0, len(sites) - 1):
-            if sites[k].weight < sites[k + 1].weight:
-                swap(sites, k)
+# search = input("Enter search query: ").lower()
+# for word in search.split():
+#         weightingFunc(word)
+# for i in range(0, len(sites) - 1):
+#         for k in range(0, len(sites) - 1):
+#             if sites[k].weight < sites[k + 1].weight:
+#                 swap(sites, k)
 
-print("\nResults: ")
-for site in sites:
-    print(site.title)
-
+# print("\nResults: ")
+# for site in sites:
+#     print(site.title)
