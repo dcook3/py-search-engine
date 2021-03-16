@@ -10,17 +10,9 @@ os.system("cls")
 
 #start of program
 
-def getTagText(l):
-    for i in range(0, len(l)):
-        
-        
-        tlist = ['a', 'abbr', 'acronym', 'b', 'bdo', 'br', 'button', 'cite', 'code', 'dfn', 'em', 'i', 'img', 'input', 'kbd', 'label', 'map', 'object', 'output', 'q', 'samp', 'script', 'select', 'small', 'span', 'strong', 'sub', 'sup', 'textarea', 'time', 'tt', 'var']
-        for tag in tlist:
-            for match in l[i].find_all(tag):
-                match.unwrap()
-        l[i] = l[i].get_text().split()
-    return(l)
+#Functions----------------------------------------------------------------------------------------------
 
+#This function converts a tag list so that it has all of its words inside a single unnested list
 def makeSList(site, tag):
     l = [] 
     if(tag == "h1"):
@@ -55,12 +47,24 @@ def makeSList(site, tag):
 
 
 
+#This function will take all text inside a tag and split the words into a list. It should also take out all irrelevent nested tags as well.
+def getTagText(l):
+    for i in range(0, len(l)):
+        tlist = ['a', 'abbr', 'acronym', 'b', 'bdo', 'br', 'button', 'cite', 'code', 'dfn', 'em', 'i', 'img', 'input', 'kbd', 'label', 'map', 'object', 'output', 'q', 'samp', 'script', 'select', 'small', 'span', 'strong', 'sub', 'sup', 'textarea', 'time', 'tt', 'var']
+        for tag in tlist:
+            for match in l[i].find_all(tag):
+                match.unwrap()
+        l[i] = l[i].get_text().split()
+    return l
 
 
+#Swap function
 def swap(ls, i):
     temp = ls[i]
     ls[i] = ls[i+1]
     ls[i+1] = temp
+
+
 
 #Bubble sort function takes in list to sort
 def sort(ls):
@@ -71,110 +75,104 @@ def sort(ls):
             if ls[k] > ls[k + 1]:
                 swap(ls, k)    
 
-#Binary search function, takes in list to search
+
+
+#Binary search function, takes in list and search term as parameters
 def bns(ls, search):
     sort(ls)
-    #Init min and max. Start at 0 for min and use max index, obtained from records, for max.
     min = 0
     max = len(ls) - 1
-    #Calculate midway point
     guess = int((min + max) / 2)
-    #As long as min is still less than max, search term can still be found. And if search term was found, break loop.
     while (min < max and search != ls[guess]):
-        #If the search term is alphabetically less than current guess index
         if (search < ls[guess]):
             max = guess - 1
         else:
             min = guess + 1
-        #New midpoint
         guess = int((min + max) / 2)   
-    #Determine if the term was found and print corresponding statement
     if search == ls[guess]:
         #Found
-        return 1
+        return True
     else:
         #Not Found
-        return 0
+        return False
     
     
 
-#Sequential search function, takes list in to search
+#Sequential search function, takes list and search term as parameters
 def seq(ls, search):
-    f = -1  #Init index var. -1 means not found
     count = 0
     #Sequential search loop
     for i in range(0, len(ls)):
         if ls[i] == search:
-            f = i
             count += 1
-            
-    #If f is still -1, search term was not found.
-    if f == -1:
-        return 0
-
-    return count + 1
+    return count
 
 
 
-# 1 - 1/count
+#Site weighting function.
 def weightingFunc(search):
-    bnTags = ['h1', 'title', 'imgAlts']# 4, 4, 2
-    seqTags = ['h2', 'h3', 'p', 'strong', 'em']# 1, 1, 1, 1, 1,  
+    #This function will use both binary and sequential search. The tags the are to be sequentially searched are seperate from tags that are to be binary serached.
+    bnTags = ['h1', 'title', 'imgAlts']#Weights: 4, 4, 2
+    seqTags = ['h2', 'h3', 'p', 'strong', 'em']#Weights: 1, 1, 1, 1, 1
+    #Take global sites list and set weight based on search success. Higher success of search means higher weight.
     for site in sites:
         for tag in bnTags:
             if(tag == 'h1' and bns(makeSList(site, tag), search)):
-                site.weight+= 2
+                site.weight += 2
             elif(tag == 'title' and bns(makeSList(site, tag), search)):
-                site.weight+= 2
+                site.weight += 2
             elif(tag == 'title' and bns(makeSList(site, tag), search)):
-                site.weight+= 2
+                site.weight += 2
         for tag in seqTags:
-            count = seq(makeSList(site,tag), search)
-            if(count != 0):
-                site.weight+= 1 - (1 / count)
+            if(count != 1):
+                site.weight += seq(makeSList(site,tag), search)
+            elif(count != 0):
+                site.weight += 1
 
+
+
+#Reset all weights
 def resetWeights():
     for site in sites:
         site.weight = 0
-    
+
+
+#Site class. Has properties for many site characteristics such as html, url, and tag lists. Each real site will be initalized as a new site object.
 class Site:
     def __init__(self, url):
         # constructor
         self.url = url
-        self.html = urllib.request.urlopen(url).read()
-        self.soup = bs(self.html, 'html.parser')
+        self.html = urllib.request.urlopen(url).read()            #Unparsed HTML
+        self.soup = bs(self.html, 'html.parser')                  #Use beautiful soup to parse into readable HTML data
+        #Tag properties, should be lists
         self.h1s = getTagText(self.soup.find_all('h1'))
         self.h2s = getTagText(self.soup.find_all('h2'))
         self.h3s = getTagText(self.soup.find_all('h3'))
+        #Take all img tags
         self.images = self.soup.find_all('img')
+        #Parse out everything but 'alt' attribute. Store into imageAlts list.
         self.imageAlts = []
         for image in self.images:
             self.imageAlts.append(image.attrs['alt'])
         self.title = getTagText(self.soup.find_all('title'))
         self.fPtags = []
         self.ptags = self.soup.find_all('p')
+        #Taking in first 5 p tags, append them to fPtags list.
         for i in range(0, len(self.ptags)): 
             if i < 5:
                 self.fPtags.append(self.ptags[i])
             else:
                 i = len(self.ptags)
+        #Now take first five p tags and parse out text inside.
         self.p = getTagText(self.fPtags)
         self.strong = getTagText(self.soup.find_all('strong'))
         self.em = getTagText(self.soup.find_all('em'))
+        #Set site-specific weight property
         self.weight = 0
-        # end constructor
         
    
 
-sites = []
-
-with open("link_list.txt") as csvfile:
-    file = reader(csvfile)
-    for rec in file:
-        sites.append(Site(rec[0]))
-
-
-
+#tkinter GUI class
 class Application(tk.Frame):
     def __init__(self, master=None):
         super().__init__(master)
@@ -219,7 +217,13 @@ class Application(tk.Frame):
     def start(self):
         self.master.mainloop()
 
+#Main program-------------------------------------------------------------------------------------------
+sites = []
+
+with open("link_list.txt") as csvfile:
+    file = reader(csvfile)
+    for rec in file:
+        sites.append(Site(rec[0]))
 
 app = Application(master= tk.Tk())
 app.start()
-
