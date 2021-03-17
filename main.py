@@ -5,10 +5,6 @@ import os
 import tkinter as tk
 import webbrowser
 from PIL import Image, ImageTk
-os.system("cls")
-
-
-#start of program
 
 #Functions----------------------------------------------------------------------------------------------
 
@@ -102,12 +98,16 @@ def bns(ls, search):
     else:
         return False
     
-    
+
+
+#Remove all problem character and makes lowercase string. Then returns back that string.
 def removeChars(s):
     if type(s) == str:
         for char in '''()"{]}[.?/';:\\,''':
             s.replace(char, '')
         return s.lower()
+
+
 
 #Sequential search function, takes list and search term as parameters
 def seq(ls, search):
@@ -210,28 +210,42 @@ class Site:
 
 #tkinter GUI class
 
+#Init class within a window: tk.Frame
 class Application(tk.Frame):
+    #Initalize with no master unless specified. If there is one, inherit it's properties.
     def __init__(self, master=None):
         super().__init__(master)
+        #Declare master
         self.master = master
+        #Declare window size
         self.master.geometry("1600x900")
-        self.master.title("Not Google")
+        #Title at top of window
+        self.master.title("Definitely Google")
+        #Make window background white
         self.master.config(bg="white")
+        #Window is not resizable in x or y direction
         self.master.resizable(False, False)
+        #Display window on invisible row-column grid
         self.grid()
+        #Call ccreate widgets method
         self.create_widgets()
 
 
     def create_widgets(self): #~100px:15ch, width in pixels/6.6 = width in ch
-        self.img = Image.open("assets/gogle.png")
-        self.img = self.img.resize((350, 134)) #350x134px
-        self.tkimage = ImageTk.PhotoImage(self.img)
-        self.imageLabel = tk.Label(self.master, bg="white", image = self.tkimage)
-        self.tBox = tk.Entry(text="Search Here", width = 109)
-        self.b = tk.Button(self.master, text="Search", width = 12, command = lambda : self.getLinks(self.tBox.get().lower()))
+        #IMAGE
+        self.img = Image.open("assets/gogle.png")                                   #Open image for program to use
+        self.img = self.img.resize((350, 134)) #350x134px                           #Resize image to actual image's dimentions
+        self.tkimage = ImageTk.PhotoImage(self.img)                                 #Make image as PILLOW tkinter-like class
+        self.imageLabel = tk.Label(self.master, bg="white", image = self.tkimage)   #Put image into tkinter label
 
-      
-        self.linkButtons = []
+        #SEARCH ITEMS
+        self.tBox = tk.Entry(text="Search Here", width = 109)                       #Make text entry box
+        self.b = tk.Button(self.master, text="Search", width = 12, command = lambda : self.getLinks(self.tBox.get().lower()))   #Create search button. When pressed, call getLinks. Uses lambda as a way to call function through the command param
+
+        #SEARCH RESULTS
+        self.linkButtons = []                                                       #Link buttons, which represent the search results, are populated and displayed in getLinks()
+
+        #DISPLAY ALL ON GRID
         self.imageLabel.grid(row = 1, column = 1, padx = (500, 0), pady = (20, 0))
         self.tBox.grid(row=2, column = 1, padx = (400, 0), pady= (25, 50))
         self.b.grid(row=2, column=2, pady= (25, 50))
@@ -239,30 +253,35 @@ class Application(tk.Frame):
 
     
     def getLinks(self, search):
+        #Remove all current displayed search result links, and reinitalize list as empty. Then reset weights on all sites
         for b in self.linkButtons:
             b.destroy()
         self.linkButtons = []
         resetWeights()
         
+        #Parse search result as a list of strings with each word
         for word in search.split():
-            
             weightingFunc(word)
+        
+        #Bubble sort sites by weight
         for i in range(0, len(sites) - 1):
             for k in range(0, len(sites) - 1):
                 if sites[k].weight < sites[k + 1].weight:
                     swap(sites, k)
         
+        #Create tkinter buttons for each site that had relation to search key
         for site in sites:
             if site.weight > 0:
                 self.linkButtons.append(tk.Button(self.master, text = " ".join(site.title), bd = 0, fg = "#0645AD", bg = "white",  cursor = "hand2", anchor = "w", activebackground = "lightgrey", width = 90 ,command = lambda aurl = site.url: webbrowser.open_new(aurl)))
-            
+        
+        #Display upto 15 buttons on grid
         for b in range(0, len(self.linkButtons)):
             if b < 15:
                 self.linkButtons[b].grid(row=b+3, column = 1, padx = (400, 0), pady= (0, 10))
         
        
             
-
+    #Start application
     def start(self):
         self.master.mainloop()
 
@@ -275,9 +294,13 @@ with open("link_list.txt") as csvfile:
     for rec in file:
         sites.append(Site(rec[0]))
 
+#Initalize new application object and run
 app = Application(master= tk.Tk())
 app.start()
 
+
+
+#TESTING W/O GUI ---------------------------------------------------------------------------------------
 # search = input("Enter search query: ").lower()
 # for word in search.split():
 #         weightingFunc(word)
@@ -289,3 +312,4 @@ app.start()
 # print("\nResults: ")
 # for site in sites:
 #     print(site.title)
+#-------------------------------------------------------------------------------------------------------
